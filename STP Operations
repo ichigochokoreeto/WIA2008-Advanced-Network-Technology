@@ -67,3 +67,71 @@
   - Because path 1 has a lower overall path cost to the root bridge, it is the preferred path and F0/1 becomes the root port on S2.
 
 6. Elect Designated Ports
+  - If a port is not a root port or a designated port, then it becomes an alternate (or backup) port. 
+  - Alternate ports and backup ports are in discarding or blocking state to prevent loops. 
+  - Apa dia buat: Pintu ini diletakkan dalam keadaan Blocking / Discarding state (pintu berkunci). Ia tidak dibenarkan menghantar atau menerima data biasa (Ethernet frames), supaya data tidak boleh berpusing masuk ke laluan bulat.
+  - Tapi kenapa tak cabut je kabel tu? Sebab pintu ini bertindak sebagai Plan B (simpanan)! Ia masih senyap-senyap mendengar kad BPDU. Kalau tiba-tiba kabel utama di sebelah kanan terputus, polis trafik akan segera buka kunci pintu ni supaya data boleh lalu.
+
+7. Elect a Root Port from Multiple Equal-Cost Paths
+  - Root port and designated ports are based on the lowest path cost to the root bridge. 
+  - But what happens if the switch has multiple equal-cost paths to the root bridge? 
+  - How does a switch designate a root port?
+  - When a switch has multiple equal-cost paths to the root bridge, the switch will determine a port using the following criteria:﻿﻿
+    a. Lowest sender BID
+      - The figure shows a topology with four switches, including switch S1 as the root bridge. 
+      - Examining the port roles, port F0/1 on switch S3 and port F0/3 on switch S4 have been selected as root ports because they have the lowest cost path (root path cost) to the root bridge for their respective switches. 
+      - S2 has two ports, F0/1 and F0/2 with equal cost paths to the root bridge. 
+      - In this case the bridge IDs of the neighboring switches, S3 and S4, will be used to break the tie. 
+      - This is known as the sender's BID. 
+      - S3 has a BID of 32769.5555.5555.5555 and S4 has a BID of 32769.1111.1111.1111.
+      - Because S4 has a lower BID, the F0/1 port of S2, which is the port connected to S4, will be the root port.
+    b. Lowest sender port priority
+      - To demonstrate these next two criteria, the topology is changed to one where two switches are connected with two equal-cost paths between them. 
+      - S1 is the root bridge, so both of its ports are designated ports.
+      - S4 has two ports with equal-cost paths to the root bridge. 
+      - Because both ports are connected to the same switch, the sender's BID (S1) is equal. So the first step is a tie.
+      - Next on the list is the sender's (S1) port priority. 
+      - The default port priority is 128, so both ports on S1 have the same port priority. This is also a tie.
+      - However, if either port on S1 was configured with a lower port priority, S4 would put its adjacent port in forwarding state. 
+      - The other port on S4 would be a blocking state.
+
+    c. Lowest Sender Port ID
+      - The last tie-breaker is the lowest sender's port ID. 
+      - Switch S4 has received BPDUs from port F0/1 and port F0/2 on S1. 
+      - Remember the decision is based on the sender's port ID, not the receiver's port ID. 
+      - Because the port ID of F0/1 on S1 is lower than port F0/2, the port F0/6 on switch S4 will be the root port. 
+      - This is the port on S4(Bridge ID: 24577.3333.3333.3333) that is connected to the F0/1 port on S1(Bridge ID: 32769.1111.1111.1111).
+      - Port F0/5 on S4 will become an alternate port and placed in the blocking state, which is the loop-prevention part of STP.
+
+8. STP Timers and Port States
+  - STP convergence requires three timers, as follows:
+﻿﻿    a. Hello Timer: The hello time is the interval between BPDUs. The default is 2 seconds but can be modified to between 1 and 10 seconds.
+﻿﻿    b. Forward Delay Timer -The forward delay is the time that is spent in the listening and learning state. The default is 15 seconds but can be modified to between 4 and 30 seconds.
+﻿﻿    c. Max Age Timer -The max age is the maximum length of time that a switch waits before attempting to change the STP topology. The default is 20 seconds but be modified to between 6 and 40 seconds.
+  - The default times can be changed on the root bridge, which dictates the value of these timers for the STP domain.
+  - STP facilitates the logical loop-free path throughout the broadcast domain. The spanning tree is determined through the information learned by the exchange of the BPDU frames between the interconnected switches. 
+  - If a switch port transitions directly from the blocking state to the forwarding state without information about the full topology during the transition, the port can temporarily create a data loop. 
+  - For this reason, STP has five ports states, four of which are operational port states as shown in the figure. 
+  - The disabled state is considered non-operational.
+  - To avoid problems with STP, IEEE recommends a maximum diameter of seven switches when using the default STP timers.
+  - Port State:
+    a. Blocking
+    b. Listening
+    c. Learning
+    d. Forwarding
+    e. Disabled
+
+9. Operational Details of Each Port State
+    Port State      BPDU                    MAC Address Table    Forwarding Data Frames
+    a. Blocking     Receive only            No update            No
+    b. Listening    Receive and send        No update            No
+    c. Learning     Receive and send        Updating table       No
+    d. Forwarding   Receive and send        Updating table       Yes
+    e. Disabled     None sent or received   No update            No
+
+10. Per-VLAN Spanning Tree(PVST)
+    - STP can be configured to operate in an environment with multiple VLANs.
+    - In PVST versions of STP, there is a root bridge elected for each spanning tree instance.
+    - This makes it possible to have different root bridges for different sets of VLANs.
+    - STP operates a separate instance of STP for each individual VLAN.
+    - If all ports on all switches are members of VLAN 1, then there is only one spanning tree instance.
