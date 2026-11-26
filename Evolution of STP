@@ -1,0 +1,43 @@
+1. Different Versions of STP
+  - STP/Common Spanning Tree(CST)/IEEE 802.1D
+  - Per-VLAN Spanning Tree (PVST+)
+  - Rapid Spanning Tree Protocol (RSTP)/IEEE 802.1w
+  - 802.1D-2004
+  - Rapid PVST+
+  - Multiple Spanning Tree Protocol(MSTP)
+  - Multiple Spanning Tree (MST)
+
+2. RSTP Concepts
+  - RSTP (IEEE 802.1w) supersedes the original 802.1D while retaining backward compatibility. 
+  - The 802.1w STP terminology remains primarily the same as the original lEEE 802.1D STP terminology. 
+  - Most parameters have been left unchanged. 
+  - Users that are familiar with the original STP standard can easily configure RSTP. 
+  - The same spanning tree algorithm is used for both STP and RSTP to determine port roles and topology.
+  - RSTP increases the speed of the recalculation of the spanning tree when the Layer 2 network topology changes. 
+  - RSTP can achieve much faster convergence in a properly configured network, sometimes in as little as a few hundred milliseconds. 
+  - If a port is configured to be an alternate port it can immediately change to a forwarding state without waiting for the network to converge.
+  - Rapid PVST+ is the Cisco implementation of RSTP on a per-VLAN basis.
+  - With Rapid PVST+ an independent instance of RSTP runs for each VLAN.
+
+3. RSTP Port States and Port Roles
+  - Port states and port roles between STP and RSTP are similar.
+
+4. PortFast and BPDU Guard
+  - Introduce "pasangan kembar" yang sangat penting untuk pintu-pintu yang bersambung terus ke komputer pengguna (Access Ports seperti PC1, PC2, PC3).   
+  - PortFast (Laluan Ekspres VIP untuk Komputer!)
+    a. Ingat tadi dalam STP biasa, bila satu kabel baru dicucuk, pintu switch kena tunggu 30 saat (15s Listening + 15s Learning) sebelum pintu dibuka.   
+    b. Apa masalahnya kalau PC biasa kena tunggu 30 saat? Bila kita hidupkan komputer (PC1), PC tu terus jerit minta alamat IP daripada pelayan DHCP (DHCP Discover). 
+      Sebab pintu switch masih terkunci selama 30 saat, jeritan PC tu disekat dan proses DHCP boleh gagal (timeout)—akhirnya PC gagal dapat alamat IPv4! 
+      (Nota: Untuk IPv6, router biasanya terus hantar mesej Router Advertisement secara berkala, jadi peranti tetap boleh dapat maklumat alamatnya kemudian).   
+    c. Apa PortFast buat: Bila kita aktifkan PortFast pada pintu access port (seperti F0/11, F0/18, F0/6 pada S2), pintu itu terus melompat dari Blocking ke Forwarding serta-merta (0 saat menunggu!) tanpa melalui Listening dan Learning.   
+    d. Pantang Larang: PortFast HANYA boleh digunakan pada pintu yang bersambung ke end devices (PC, laptop, printer). Jangan sesekali letak PortFast pada pintu yang bersambung ke switch lain, sebab ia boleh mencipta laluan bulat (loop).   
+  - BPDU Guard (Pengawal Keselamatan Pintu VIP!)
+    a. Bayangkan pintu F0/11 dah diberi pas VIP PortFast sebab kita anggap hanya PC1 sahaja yang cucuk di situ. Tiba-tiba, ada orang nakal (atau staf tersilap) cabut PC1 dan cucuk sebuah switch kecil pada pintu F0/11 tu! Sebab PortFast terus buka pintu tanpa periksa, wujudlah risiko loop!   
+    b. Apa BPDU Guard buat: Komputer biasa (PC) takkan pernah hantar kad kempen BPDU; hanya switch sahaja yang hantar BPDU. Jadi, BPDU Guard berdiri menjaga pintu PortFast tersebut.
+    c. Tindakan Tegas: Sebaik sahaja pintu itu menerima walau satu mesej BPDU, BPDU Guard terus mematikan pintu tersebut serta-merta dan menukarnya ke status errdisabled (error-disabled).
+    d. Cara Baiki: Pintu yang kena errdisabled takkan hidup balik sendiri—admin network mesti datang periksa masalah tu dan hidupkan semula pintu tersebut secara manual(biasanya dengan arahan shutdown diikuti no shutdown).
+
+5. Alternatives to STP
+  - Multi System Link Aggregation (MLAG)
+  - Shortest Path Bridging (SPB)
+  - Transparent Interconnect of Lots of Links (TRILL)
