@@ -38,7 +38,7 @@
   - S3 forwards the broadcast out all available switch ports, except the originating port.
   - S1 forwards the broadcast only out of F0/3.
 
-6. Issues wirh Redundant Switch Links
+6. Issues with Redundant Switch Links
   - Kenapa network boleh crash teruk kalau ada banyak jalan (redundancy) tapi kita lupa hidupkan STP.
   - Apa Jadi Bila Layer 2 Loop Berlaku? Kalau ada jalan bulat dan tiada STP, kereta mainan (data/frames) akan berpusing tanpa henti dan menyebabkan 3 masalah besar:   
     a. MAC Address Table Instability (Polis Trafik Pening): Bayangkan polis trafik ada buku nota untuk catat "Kereta Ali datang dari Pintu A". Tiba-tiba kereta yang sama berpusing dan muncul dari Pintu B pula! Polis trafik asyik padam dan tulis semula buku notanya beribu-ribu kali sesaat sampai dia pening.
@@ -59,3 +59,35 @@
     c. High CPU Utilization: Otak Switch terlalu penat kemas kini buku nota dan fotostat beribu-ribu frame setiap saat.
     d. Network Down: Switch terus "pengsan" (tak mampu hantar data lain lagi) hanya dalam masa beberapa saat!
 
+8. Broadcast Storm
+  - A broadcast storm is an abnormally high number of broadcasts overwhelming the network during a specific amount of time. 
+  - Broadcast storms can disable a network within seconds by overwhelming switches and end devices. 
+  - Broadcast storms can be caused by a hardware problem such as a faulty NIC or from a Layer 2 loop in the network.
+  - Layer 2 broadcasts in a network, such as ARP Requests are very common. 
+  - A Layer 2 loop is likely to have immediate and disabling consequences on the network. 
+  - Layer 2 multicasts are typically forwarded the same way as a broadcast by the switch. 
+  - So, although IPv6 packets are never forwarded as a Layer 2 broadcast, ICMPv6 Neighbor Discovery uses Layer 2 multicasts.
+  - A host caught in a Layer 2 loop is not accessible to other hosts on the network.
+  - Due to the constant changes in its MAC address table, the switch does not know out of which port to forward unicast frames. 
+  - In the previous animation, the switches will have the incorrect ports listed for PC1. 
+  - Any unknown unicast frame destined for PC1 loops around the network, just as the broadcast frames do. 
+  - More and more frames looping around the network eventually creates a broadcast storm.
+  - To prevent these issues from occurring in a redundant network, some type of spanning tree must be enabled on the switches. 
+  - Spanning tree is enabled, by default, on Cisco switches to prevent Layer 2 loops from occurring.
+
+9. The Spanning Tree Algorithm
+  - Radia Perlman: Her spanning tree algorithm (STA) creates a loop-free topology by selecting a single root bridge where all other switches determine a single least-cost path.
+  - The spanning tree algoritm begins by selecting a single root bridge.
+  - Each switch will determine a single, least cost path from itself to the root bridge.
+  - STP prevents loops from occuring by configuring a loop-free path through the network using strategically placed "blocking-state" ports.
+  - The switches running STP are able to compensate for failures by dynamically unblocking the previously blocked ports and permitting traffic to traverse the alternate paths.
+  - STP ensures that there is only one logical path between all destinations on the network by intentionally blocking redundant paths that could cause a loop. 
+  - When a port is blocked, user data is prevented from entering or leaving that port. 
+  - Blocking the redundant paths is critical to preventing loops on the network.
+  - A blocked port has the effect of making that link a non-forwarding link between the two switches.
+  - This creates a topology where each switch has ony a single path to the root bridge, similar to branches on a tree that connect to the root of the tree.
+  - Link Failure Causes Recalculation: The physical paths still exist to provide redundancy, but these paths are disabled to prevent the loops from occuring.
+  - If the path is ever needed to compensate for a network cable or switch failure, STP recalculates the paths and unblocks the necessarry ports to allow the redundant path to become active.
+  - STP recalculations can occur at any time a new switch or new inter-switch link is added to the network.
+  - STP prevents loops from occurring by configuring a loop-free path through the network using strategically placed "blocking-state" ports.
+  - The switches running STP are able to compensate for failure by dynamically unblocking the previously blocked ports and permitting traffic to traverse to alternate paths.
