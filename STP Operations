@@ -1,0 +1,69 @@
+1. Steps to a Loop-free Topology
+  - Using the STA, STA builds a loop-free topology in a four-step process:
+    a. Elect the root bridge
+    b. Elect the root ports
+    c. Elect designated ports
+    d. Elect alternate (blocked) ports
+  - During STA and STP functions, switches use Bridge Protocol Data Units (BPDUs) to share information about themselves and their connections. 
+  - BPDUs are used to elect the root bridge, root ports, designated ports, and alternate ports. 
+  - Each BPDU contains a bridge ID (BID) that identifies which switch sent the BPDU. 
+  - The BID is involved in making many of the STA decisions including root bridge and port roles. 
+  - The BID contains a priority value, an extended system ID, and the MAC address of the switch. 
+  - The lowest BID value is determined by the combination of these three fields.
+  - Bridge Priority
+    a. Bayangkan setiap switch datang bertanding dengan membawa nombor pangkat. Dalam STP, nombor paling kecil menang!
+    b. Nombor Asal (Default): Secara automatik, semua switch Cisco diberikan nombor 32768.
+    c. Range: Kita boleh ubah nombor ini dari 0 hingga 61440.
+    d. Peraturan Gandaan (Increments): Tak boleh letak nombor suka hati macam 5 atau 100. Mesti naik atau turun dalam gandaan 4096 (contoh: 0, 4096, 8192, 12288, ..., 32768, ..., 61440).
+    e. Nombor Raja: Kalau kita set Bridge Priority kepada 0, switch tu automatik kalahkan semua switch lain dan terus jadi Root Bridge.
+  - Extended System ID
+    a. Apa Extended System ID buat: Ia adalah nombor 12-bit VLAN ID yang ditambah terus ke dalam nilai Bridge Priority tadi.
+    b. Contoh pengiraan: Kalau Bridge Priority asal ialah 32768 dan kita guna VLAN 10, maka jumlah nilai priority dalam BID menjadi 32768 + 10 = 32778.
+    c. Kenapa bagus? Dengan adanya tag VLAN ini, VLAN 10 boleh ada Ketua Kampung (Switch A), manakala VLAN 20 boleh ada Ketua Kampung yang lain (Switch B). Jadi kabel simpanan yang tadi kena "tidur" untuk VLAN 10 boleh digunakan secara aktif untuk laluan data VLAN 20—tiada kabel yang membazir!
+  - MAC Address
+    a. When two switches are configured with the same priority and have the same extended system ID, the switch having the MAC address with the lowest value, expressed in hexadecimal, will have the lower BID.
+    b. Contoh: Antara 0000.1111.AAAA dan 0000.1111.BBBB, yang AAAA menang sebab huruf A lebih kecil nilainya daripada B.
+
+2. Elect the Root Bridge
+  - The STA designates a single switch as the root bridge and uses it as the reference point for all path calculations. 
+  - Switches exchange BPDUs to build the loop-free topology beginning with selecting the root bridge.
+  - An election process determines which switch becomes the root bridge. 
+  - All switches in the broadcast domain participate in the election process. 
+  - After a switch boots, it begins to send out BPDU frames every two seconcis. 
+  - These BPDU frames contain the BID of the sending switch and the BID of the root bridge, known as the Root ID.
+  - The switch with the lowest BID will become the root bridge. 
+  - At first, all switches declare themselves as the root bridge with their own BID set as the Root ID(semua switch fikir masing-masing root bridge).
+  - Eventually, the switches learn through the exchange of BPDUs which switch has the lowest BID and will agree(sepakat) on one root bridge.
+
+3. Impacts of Default BIDs
+  - Because the default priority is 32768, it is possible for two or more switches to have the same priority. 
+  - In this scenario, where the priorities are the same, the switch with the lowest MAC address will become the root bridge. 
+  - To ensure that the root bridge decision best meets network requirements, it is recommended that the administrator configure the desired root bridge switch with a lower priority.
+  - For example, all switches are configured with the same priority of 32769. 
+    a. Here the MAC address becomes the deciding factor as to which switch becomes the root bridge. 
+    b. The switch with the lowest hexadecimal MAC address value is the preferred root bridge. 
+
+4. Determine the Root Path Cost
+  - Bayangkan: Setiap kabel jalan raya ada "harga tol" (Port Cost) berdasarkan kelajuan jalan tu.
+  - Switch akan pilih laluan yang mempunyai jumlah harga tol paling RENDAH untuk ke rumah Root Bridge.
+  - When the root bridge has been elected for a given spanning tree instance, the STA starts the process of determining the best paths to the root bridge from all destinations in the broadcast domain. 
+  - The path information, known as the internal root path cost, is determined by the sum of all the individual port costs along the path from the switch to the root bridge.
+  - The BPDU includes the root path cost. This is the cost of the path from the sending switch to the root bridge.
+  - When a switch receives the BPDU, it adds the ingress port cost of the segment to determine its internal root path cost.
+  - The default port costs are defined by the speed at which the port operates. 
+  - Cisco switches by default use the values as defined by the IEEE 802.1D standard(old), also known as the short path cost, for both STP and RSTP. 
+  - However, the lEEE standard suggests using the values defined in the IEEE-802.1w(new), also known as long path cost, when using 10 Gbps links and faster.
+  - Although switch ports have a default cost associated with them, the port cost is configurable.
+  - The ability to configure individual port costs gives the administrator the flexibility to manually control the spanning tree paths to the root bridge.
+
+5. Elect the Root Ports
+  - After the root bridge has been determined, the STA algorithm is used to select the root port. 
+  - Every non-root switch will select one root port. 
+  - The root port is the port closest to the root bridge in terms of overall cost (best path) to the root bridge. 
+  - This overall cost is known as the internal root path cost.
+  - The internal root path cost is equal to the sum of all the port costs along the path to the root bridge.
+  - Paths with the lowest cost become preferred, and all other redundant paths are blocked. 
+  - In the example, the internal root path cost from S2 to the root bridge S1 over path 1 is 19 (based on the lEEE-specified individual port cost) while the internal root path cost over path 2 is 38. 
+  - Because path 1 has a lower overall path cost to the root bridge, it is the preferred path and F0/1 becomes the root port on S2.
+
+6. Elect Designated Ports
