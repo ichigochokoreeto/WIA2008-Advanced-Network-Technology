@@ -47,3 +47,15 @@
   - Kenapa Layer 2 Lagi Bahaya Dari Layer 3? Compare Layer 3 (Router / IPv4 & IPv6) dengan Layer 2 (Switch / Ethernet):
     a. Layer 3 (Ada Tarikh Luput): Setiap kali paket data lalu dekat Router, Router akan tolak 1 nyawa pada surat tu. Dalam IPv4 nyawa ini dipanggil TTL (Time to Live), manakala dalam IPv6 ia dipanggil Hop Limit. Bila nyawa jadi 0, Router terus buang surat tu ke dalam tong sampah. Jadi ia takkan berpusing selamanya.
     b. Layer 2 (Tiada Tarikh Luput): Switch (Ethernet) tiada fungsi nyawa macam TTL atau Hop Limit. Jadi kalau data dah masuk bulatan di Layer 2, ia akan hidup dan berpusing selama-lamanya tanpa mati-mati sampai ada orang cabut kabel! Sebab itulah STP dicipta khas untuk selamatkan Layer 2.
+
+7. Layer 2 Loops
+  - Explain 3 jenis frames yang boleh buat hal kalau STP tak dihidupkan
+    a. Broadcast Frames (Pengumuman Pembesar Suara): Contoh ARP Request (macam jerit guna megafon: "Siapa pemilik IP 192.168.1.5?!"). Bila Switch dengar jeritan ni, dia wajib salin dan hantar ke semua pintu (ports) kecuali pintu tempat jeritan tu datang (ingress port). Bila ada laluan bulat, jeritan ni melantun dan berganda tanpa henti!
+    b. Multicast Frames (Pengumuman Kumpulan Tertentu): Sama macam Broadcast, kalau Switch tak tahu siapa ahli kumpulan tu, dia akan hantar ke semua pintu juga dan berpusing dalam bulatan.
+    c. Unknown Unicast Frames (Surat Tak Jumpa Alamat dalam Buku): Bayangkan posmen (Switch) dapat surat untuk "Rumah Ali", tapi dia tengok dalam buku nota (MAC Address Table) nama Ali belum tercatat lagi. Sebab tak tahu rumah Ali kat pintu mana, posmen terpaksa fotostat surat tu dan hantar ke semua pintu (kecuali pintu asal). Akibatnya, Ali boleh terima surat pendua (duplicate frames) berkali-kali!
+  - Macam mana satu network boleh tumbang/bring down dalam beberapa saat sahaja
+    a. Broadcast berpusing masuk ikut Pintu 1, keluar Pintu 2, pusing balik masuk Pintu 1.
+    b. MAC Database Instability: Switch keliru sebab nampak pengirim yang sama kejap muncul dari Pintu 1, kejap muncul dari Pintu 2. Buku nota MAC Address Table bertukar-tukar tanpa henti.
+    c. High CPU Utilization: Otak Switch terlalu penat kemas kini buku nota dan fotostat beribu-ribu frame setiap saat.
+    d. Network Down: Switch terus "pengsan" (tak mampu hantar data lain lagi) hanya dalam masa beberapa saat!
+
