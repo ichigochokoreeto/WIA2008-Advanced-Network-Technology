@@ -1,0 +1,95 @@
+1. Introduction
+  - The Dynamic Host Configuration Protocol (DHCP) dynamically assigns IP addresses to devices.
+  - Network administrator do not have to spend your day configuring IP addresses for every device on network.
+  - Learn how to configure a Cisco IOS router to be a DHCPv4 server.
+  - Learn how to configure a Cisco IOS router as a client.
+
+2. DHCPv4 Concepts
+  2.1 DHCPv4 Server and Client  
+      - DHCPv4 assigns IPv4 addresses and other network configuration information dynamically.
+      - A dedicated DHCPv4 server is scalable and relatively easy to manage.
+      - DHCPv4 server dynamically assigns, or leases, an IPv4 address from a pool of addresses for a limited period of time chosen by the server, or until the client no longer needs the address.
+      - Clients lease the information from the server for an administratively defined period.
+      - Administrators configure DHCPv4 servers to set the leases to time out at different intervals.
+      - The lease is typically anywhere from 24 hours to a week or more.
+      - When the lease expires, the client must ask for another address, although the client is typically reassigned the same address.
+  2.2 DHCPv4 Operation
+  2.3 Steps to Obtain a Lease
+      a. DHCP Discover (DHCPDISCOVER)
+      b. DHCP Offer (DHCPOFFER)
+      c. DHCP Request (DHCPREQUEST)
+      d. DHCP Acknowledgment (DHCPACK)
+  2.4 Steps to Renew a Lease
+      a. DHCP Request (DHCPREQUEST)
+      b. DHCP Acknowledgment (DHCPACK)
+
+3. Configure a Cisco IOS DHCPv4 Server
+    3.1 Steps to Configure a Cisco IOS DHCPv4 Server
+        a. Exlude IPv4 addresses
+            Router(config)# ip dhcp excluded-address low-address [high-address]
+        b. Define a DHCPv4 pool name
+            Router(config)# ip dhcp pool pool-name  
+            Router(dhcp-config)#
+        c. Configure the DHCPv4 pool
+            network network-number [mask | /prefix-length]
+            default-router address [address2...address8]
+            dns-server address [address2...address8]
+            domain-name domain
+            lease {days [hours [minutes]] | infinite}
+            netbios-name-server address [address2...address8]
+        d. Configuration Example
+            R1(config)# ip dhcp excluded-address 192.168.10.1 192.168.10.9
+            R1(config)# ip dhcp excluded-address 192.168.10.254
+            R1(config)# ip dhcp pool LAN-POOL-1
+            R1(dhcp-config)# network 192.168.10.0 255.255.255.0
+            R1(dhcp-config)# default-router 192.168.10.1
+            R1(dhcp-config)# dns-server 192.168.11.5
+            R1(dhcp-config)# domain-name example.com
+            R1(dhcp-config)# end
+            R1#
+        e. DHCPv4 Verification Commands
+            - show running-config | section dhcp
+            - show ip dhcp binding
+            - show ip dhcp server statistics
+        f. Verify DHCPv4 is Operational
+            R1# show running-config | section dhcp
+            R1# show ip dhcp binding
+            R1# show ip dhcp server statistics
+            C:\Users\Student> ipconfig /all
+        g. Disable the Cisco IOS DHCPv4 Server
+            R1(config)# no service dhcp
+            R1(config)# service dhcp
+        h. DHCPv4 Relay
+            C:\Users\Student> ipconfig /release
+            C:\Users\Student> ipconfig /renew
+            R1(config)# interface g0/0/0
+            R1(config-if)# ip helper-address 192.168.11.6
+            R1(config-if)# end
+            R1# show ip interface g0/0/0
+            C:\Users\Student> ipconfig /all
+        i. Other Service Broadcasts Relayed
+            - DHCPv4 is not the only service that the router can be configured to relay. 
+            - By default, the ip helper-address command forwards the following eight UDP services:
+              Port 37: Time
+              Port 49: TACACS
+              Port 53: DNS
+              Port 67: DHCP/BOOTP server
+              Port 68: DHCP/BOOTP client
+              Port 69: TFTP
+              Port 137: NetBIOS name service
+              Port 138: NetBIOS datagram service
+
+4. Configure a DHCPv4 Client
+    - To configure an Ethernet interface as a DHCP client: ip address dhcp
+    - Configuration example
+      SOHO(config)# interface G0/0/1
+      SOHO(config-if)# ip address dhcp
+      SOHO(config-if)# no shutdown
+      SOHO# show ip interface g0/0/1 (confirms that the interface is up and that the address was allocated by a DHCPv4 server)
+    - Home Router as a DHCPv4 Client
+      - Home routers are typically already set to receive IPv4 addressing information automatically from the ISP. 
+      - This is so that customers can easily set up the router and connect to the internet.
+      - For example, the figure shows the default WAN setup page for a Packet Tracer wireless router. 
+      - Notice that the internet connection type is set to Automatic Configuration - DHCP. 
+      - This selection is used when the router is connected to a DSL or cable modem and acts as a DHCPv4 client, requesting an IPv4 address from the ISP.
+      - Various manufacturers of home routers will have a similar setup.
