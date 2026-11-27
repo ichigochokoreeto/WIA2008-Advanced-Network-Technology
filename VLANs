@@ -1,0 +1,4 @@
+1. Normal vs Extended Range VLAN
+  Kategori VLAN	      Range	          Lokasi Simpanan Lalai (Default Storage)
+  Normal Range      	1 – 1005	      flash:vlan.dat (Flash memory)
+  Extended Range     	1006 – 4094   	Running configuration file (RAM
