@@ -1,0 +1,216 @@
+1. Inter-VLAN Routing Operation
+  - VLANs are used to segment switched Layer 2 networks for a variety of reasons.
+  - Hosts in a one VLAN cannot communicate with hosts in another VLAN unless there is a router or a Layer 3 switch to provide routing services.
+  - Inter-VLAN routing is the process of forwarding network traffic from one VLAN to another VLAN.
+  - Inter-VLAN routing options:
+    a. Legacy Inter-VLAN routing
+    b. Router-on-a-Stick
+    c. Layer 3 switch using switched virtual interfaces
+
+2. Router-on-a-Stick Inter-VLAN Routing
+  - How traffic from 2 different VLANs communicate with each other through physical cable between Layer 2 switch and router 
+  - PC VLAN 10 -> Router -> PC VLAN 30
+  - Does not scale beond 50 VLANs
+  - Apabila PC dalam VLAN 10 nak hantar data ke PC dalam VLAN 20:
+    a. Dari Switch ke Router (Naik ke atas):
+        Switch terima frame daripada PC VLAN 10, lekatkan 802.1Q tag (VLAN 10), dan hantar melalui port trunk menuju ke router.   
+    b. Router Terima & Proses (Layer 3 Routing):
+        Port fizikal router terima frame tersebut, baca tag VLAN 10, dan serahkan kepada subinterface G0/0.10 (yang menjadi Default Gateway bagi VLAN 10). Router buka lapisan IP, tengok alamat IP destinasi (yang berada dalam subnet VLAN 20), dan buat keputusan routing.   
+    c. Dari Router Balik ke Switch (Turun ke bawah):
+        Router buang tag VLAN 10, lekatkan 802.1Q tag baharu (VLAN 20) melalui subinterface G0/0.20, dan hantar semula keluar melalui kabel fizikal yang sama balik ke switch.   
+    d. Switch Hantar ke Destinasi:
+        Switch terima frame bertag VLAN 20 tadi, buang tag tersebut, dan hantar ke PC destinasi dalam VLAN 20
+  - S1 VLAN and Trunking Configuration
+    a. Create and name the VLANs
+        S1(config)# vlan 10
+        S1(config-vlan)# name LAN10
+        S1(config-vlan)# exit
+        S1(config)# vlan 20
+        S1(config-vlan)# name LAN20
+        S1(config-vlan)# exit
+        S1(config)# vlan 99
+        S1(config-vlan)# name Management
+        S1(config-vlan)# exit
+        S1(config)#
+    b. Create the management interface
+        S1(config)# interface vlan 99
+        S1(config-if)# ip add 192.168.99.2 255.255.255.0
+        S1(config-if)# no shut
+        S1(config-if)# exit
+        S1(config)# ip default-gateway 192.168.99.1
+        S1(config)#
+    c. Configure access ports
+        S1(config)# interface fa0/6
+        S1(config-if)# switchport mode access
+        S1(config-if)# switchport access vlan 10
+        S1(config-if)# no shut
+        S1(config-if)# exit
+        S1(config)#
+    d. Configure trunking ports
+        S1(config)# interface fa0/1
+        S1(config-if)# switchport mode trunk
+        S1(config-if)# no shut
+        S1(config-if)# exit
+        S1(config)# interface fa0/5
+        S1(config-if)# switchport mode trunk
+        S1(config-if)# no shut
+        S1(config-if)# end
+  - S2 VLAN and Trunking Configuration
+    S2(config)# vlan 10
+    S2(config-vlan)# name LAN10
+    S2(config-vlan)# exit
+    S2(config)# vlan 20
+    S2(config-vlan)# name LAN20
+    S2(config-vlan)# exit
+    S2(config)# vlan 99
+    S2(config-vlan)# name Management
+    S2(config-vlan)# exit
+    S2(config)#
+    S2(config)# interface vlan 99
+    S2(config-if)# ip add 192.168.99.3 255.255.255.0
+    S2(config-if)# no shut
+    S2(config-if)# exit
+    S2(config)# ip default-gateway 192.168.99.1
+    S2(config)# interface fa0/18
+    S2(config-if)# switchport mode access
+    S2(config-if)# switchport access vlan 20
+    S2(config-if)# no shut
+    S2(config-if)# exit
+    S2(config)# interface fa0/1
+    S2(config-if)# switchport mode trunk
+    S2(config-if)# no shut
+    S2(config-if)# exit
+    S2(config-if)# end
+- R1 Subinterface Configuration
+  R1(config)# interface G0/0/1.10
+  R1(config-subif)# description Default Gateway for VLAN 10
+  R1(config-subif)# encapsulation dot1Q 10
+  R1(config-subif)# ip add 192.168.10.1 255.255.255.0
+  R1(config-subif)# exit
+  R1(config)#
+  R1(config)# interface G0/0/1.20
+  R1(config-subif)# description Default Gateway for VLAN 20
+  R1(config-subif)# encapsulation dot1Q 20
+  R1(config-subif)# ip add 192.168.20.1 255.255.255.0
+  R1(config-subif)# exit
+  R1(config)#
+  R1(config)# interface G0/0/1.99
+  R1(config-subif)# description Default Gateway for VLAN 99
+  R1(config-subif)# encapsulation dot1Q 99
+  R1(config-subif)# ip add 192.168.99.1 255.255.255.0
+  R1(config-subif)# exit
+  R1(config)#
+  R1(config)# interface G0/0/1
+  R1(config-if)# description Trunk link to S1
+  R1(config-if)# no shut
+  R1(config-if)# end
+- Verify Connectivity Between PC1 and PC2 (Using Windows/PC)
+  C:\Users\PC1> ipconfig
+  C:\Users\PC1> ping 192.168.20.10
+  C:\Users\PC1> ping 192.168.99.2
+- Router-on-a-Stick Inter_VLAN Routing Verification
+  a. show ip route
+  b. show ip interface brief
+  c. show interfaces
+  d. show interfaces trunk
+
+3. Inter-VLAN Routing using Layer 3 Switches
+  - The modern method of performing inter-VLAN routing is to use Layer 3 switches and switched virtual interfaces (SVI). 
+  - An SVI is a virtual interface that is configured on a Layer 3 switch.
+  - A Layer 3 switch is also called a multilayer switch as it operates at Layer 2 and Layer 3: However, in this course we use the term Layer 3 switch.
+  - Inter-VLAN SVIs are created the same way that the management VLAN interface is configured. 
+  - The SVI is created for a VLAN that exists on the switch. 
+  - Although virtual, the SVI performs the same functions for the VLAN as a router interface would. 
+  - Specifically, it provides Layer 3 processing for packets that are sent to or from all switch ports associated with that VLAN.
+  - Advantages of using Layer 3 switches for inter-VLAN routing:
+﻿    a. ﻿They are much faster than router-on-a-stick because everything is hardware switched and routed.
+﻿﻿    b. There is no need for external links from the switch to the router for routing.
+﻿﻿    c. They are not limited to one link because Layer 2 EtherChannels can be used as trunk links between the switches to increase bandwidth.
+﻿﻿    d. Latency is much lower because data does not need to leave the switch in order to be routed to a different network.
+﻿﻿    e. They more commonly deployed in a campus LAN than routers.
+  - Disadvantage is that Layer 3 switches are more expensive.
+  - Capabilities of a Layer 3 switch:
+    a. Route from one VLAN to another using multiple switched virtual interfaces (SVIs).
+    b. Convert a Layer 2 switchport to a Layer 3 interface (i.e., a routed port). A routed port is similar to a physical interface on a Cisco IOS router.
+  - Layer 3 Switch Configuration
+    a. Create the VLANs
+        D1(config)# vlan 10
+        D1(config-vlan)# name LAN10
+        D1(config-vlan)# vlan 20
+        D1(config-vlan)# name LAN20
+        D1(config-vlan)# exit
+        D1(config)#
+    b. Create the SVI VLAN interfaces
+        D1(config)# interface vlan 10
+        D1(config-if)# description Default Gateway SVI for 192.168.10.0/24
+        D1(config-if)# ip add 192.168.10.1 255.255.255.0
+        D1(config-if)# no shut
+        D1(config-if)# exit
+        D1(config)#
+        D1(config)# int vlan 20
+        D1(config-if)# description Default Gateway SVI for 192.168.20.0/24
+        D1(config-if)# ip add 192.168.20.1 255.255.255.0
+        D1(config-if)# no shut
+        D1(config-if)# exit
+        D1(config)#
+    c. Configure access ports
+        D1(config)# interface GigabitEthernet1/0/6
+        D1(config-if)# description Access port to PC1
+        D1(config-if)# switchport mode access
+        D1(config-if)# switchport access vlan 10
+        D1(config-if)# exit
+        D1(config)#
+        D1(config)# interface GigabitEthernet1/0/18
+        D1(config-if)# description Access port to PC2
+        D1(config-if)# switchport mode access
+        D1(config-if)# switchport access vlan 20
+        D1(config-if)# exit
+    d. Enable IP routing
+        D1(config)# ip routing
+        D1(config)#
+  - Layer 3 Switch Inter-VLAN Routing Verification (Windows/PC)
+    C:\Users\PC1> ipconfig
+    C:\Users\PC1> ping 192.168.20.10
+  - Routing Configuration on a Layer 3 Switch
+    a. Configure the routed port
+        D1(config)# interface GigabitEthernet0/0/1
+        D1(config-if)# description routed Port Link to R1
+        D1(config-if)# no switchport
+        D1(config-if)# ip address 10.10.10.2 255.255.255.0
+        D1(config-if)# no shut
+        D1(config-if)# exit
+        D1(config)#
+    b. Enable routing
+        D1(config)# ip routing
+        D1(config)#
+    c. Configure routing
+        D1(config)# router ospf 10
+        D1(config-router)# network 192.168.10.0 0.0.0.255 area 0
+        D1(config-router)# network 192.168.20.0 0.0.0.255 area 0
+        D1(config-router)# network 10.10.10.0 0.0.0.3 area 0
+        D1(config-router)# ^Z
+        D1#
+    d. Verify routing
+        D1# show ip route | begin Gateway
+    e. Verify connectivity
+        C:\Users\PC1> ping 10.20.20.254
+
+4. Troubleshoot Inter-VLAN Routing
+  - Common Inter-VLAN Issues
+    a. Missing VLANs
+        S1# show vlan brief
+        S1(config)# no vlan 10
+        S1(config)# do show vlan brief
+        S1(config)# do show interface fa0/6 switchport
+        S1(config)# vlan 10
+        S1(config-vlan)# do show vlan brief
+        S1(config-vlan)# exit
+        S1(config)# vlan 10
+    b. Switch Trunk Port Issues
+        S1# show interfaces trunk
+        S1# show running-config | include interface fa0/5
+        S1(config)# interface fa0/5
+        S1(config-if)# do show interfaces trunk
+    c. Switch Access Port Issues
+
+    d. Router Configuration Issues
