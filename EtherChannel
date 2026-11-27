@@ -94,5 +94,57 @@
     - A standby link will become active should one of the current active links fail.
 
 3. Configure EtherChannel
+  - EtherChannel is disabled by default and must be configured.
+    S1(config)# interface range FastEthernet 0/1 - 2
+    S1(config-if-range)# channel-group 1 mode active
+    Creating a port-channel interface Port-channel 1
+    S1(config-if-range)# exit
+    S1(config)# interface port-channel 1
+    S1(config-if)# switchport mode trunk
+    S1(config-if)# switchport trunk allowed vlan 1,2,20
+  - Syntax Checker: Configure EtherChannel
+    S1(config)#interface range fa 0/1 - 2
+    S1(config-if-range)#channel-group ?
+    <1-6> Channel group number
+    S1(config-if-range)#channel-group 1 ?
+    mode Etherchannel Mode of the interface
+    S1(config-if-range)#channel-group 1 mode ?
+    active     Enable LACP unconditionally  
+    auto       Enable PAgP only if a PAgP device is   detected  
+    desirable  Enable PAgP unconditionally  
+    on         Enable Etherchannel only  
+    passive    Enable LACP only if a LACP device is detected
+    S1(config-if-range)#channel-group 1 mode active
+    S1(config-if-range)#interface port-channel 1
+    S1(config-if)#switchport mode trunk
+    S1(config-if)#switchport trunk allowed vlan 1,2,20
 
 4. Verify and Troubleshoot EtherChannel
+    S1# show interfaces port-channel 1
+    S1# show etherchannel summary
+    S1# show etherchannel port-channel
+    S1# show interfaces f0/1 etherchannel
+    S1# show run | begin interface port-channel
+  - Correct the Misconfiguration
+    S1(config)# no interface port-channel 1
+    S1(config)# interface range fa0/1 - 2
+    S1(config-if-range)# channel-group 1 mode desirable
+    Creating a port-channel interface Port-channel 1
+    S1(config-if-range)# no shutdown
+    S1(config-if-range)# exit
+    S1(config)# interface port-channel 1
+    S1(config-if)# switchport mode trunk
+    S1(config-if)# end
+    S1# 
+
+  - Common Issues with EtherChannel Configurations
+    a. Assigned ports in the EtherChannel are not part of the same VLAN, or not configured as trunks. 
+        Ports with different native VLANs cannot form an EtherChannel.
+    ﻿﻿b. Trunking was configured on some of the ports that make up the EtherChannel, but not all of them. 
+        It is not recommended that you configure trunking mode on individual ports that make up the EtherChannel. 
+        When configuring a trunk on an EtherChannel, verify the trunking mode on the EtherChannel.
+    ﻿﻿c. If the allowed range of VLANs is not the same, the ports do not form an EtherChannel even when PAgP is set to the auto or desirable mode.
+    ﻿d. ﻿The dynamic negotiation options for PAgP and LACP are not compatibly configured on both ends of the EtherChannel.
+  - PAgP and LACP are used for link aggregation (EtherChannel)
+  - DTP is used for automating the creation of trunk links.
+  - When an EtherChannel trunk is configured, typically EtherChannel(PAgP or LACP) is configured first and then DTP.
