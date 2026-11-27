@@ -212,5 +212,18 @@
         S1(config)# interface fa0/5
         S1(config-if)# do show interfaces trunk
     c. Switch Access Port Issues
-
+        S1# show interface fa0/6 switchport
+        S1# show running-config interface fa0/6
+        S1# configure terminal
+        S1(config)# interface fa0/6
+        S1(config-if)# switchport access vlan 10
+        S1(config-if)# do show interface fa0/6 switchport
     d. Router Configuration Issues
+        R1# show ip interface brief
+        R1# show interfaces | include Gig|802.1Q
+        R1# show running-config interface g0/0/1.10
+        R1# conf t
+        R1(config)# interface gigabitEthernet 0/0/1.10
+        R1(config-subif)# encapsulation dot1Q 10
+        R1(config-subif)# end
+        R1# show interfaces | include Gig|802.1Q
