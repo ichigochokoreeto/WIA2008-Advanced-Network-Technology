@@ -1,0 +1,9 @@
+1. Introduction to DTP
+
+2. Negotiated Interface Modes
+  Switch(config-if)# switchport mode { access | dynamic { auto | desirable } | trunk }
+    a. access: Memaksa pintu masuk ke mod nontrunking kekal dan cuba berunding supaya pautan menjadi access (bukan trunk), tanpa mengira tetapan pintu jiran.
+    b. dynamic auto: Bersifat pasif; bersedia menjadi trunk hanya jika pintu jiran ditetapkan kepada trunk atau dynamic desirable. Ini ialah mod lalai (default) pada semua antara muka Ethernet switch Cisco dalam konteks ini.
+    c. dynamic desirable: Bersifat aktif; cuba memulakan rundingan untuk menjadikan pautan sebagai trunk, dan akan berjaya jika pintu jiran berada dalam mod trunk, dynamic desirable, atau dynamic auto.
+    d. trunk: Memaksa pintu masuk ke mod trunking kekal dan berunding untuk menukar pintu jiran menjadi trunk, malah pintu ini tetap menjadi trunk walaupun jirannya bukan dalam mod trunk.
+
