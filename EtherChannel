@@ -1,0 +1,98 @@
+1. Introduction
+  - Masalah yang Diselesaikan (STP vs. Bandwidth)
+    a. Secara default, apabila anda menyambungkan beberapa kabel (redundant links) antara dua switch untuk tujuan redundancy, Spanning Tree Protocol (STP) akan menyekat (block) pautan tambahan tersebut bagi mengelakkan Layer 2 loop. Akibatnya, jalur lebar (bandwidth) kabel tambahan itu terbazir dan tidak digunakan.
+  - Bagaimana EtherChannel Berfungsi (Link Aggregation)
+    a. EtherChannel menggabungkan beberapa pautan fizikal (sehingga 8 port aktif) menjadi satu pautan logikal tunggal (Port-Channel). 
+    b. Bagi STP, gabungan kabel ini dilihat sebagai satu pautan sahaja, jadi STP tidak akan menyekat port-port ahli di dalam bundle tersebut—memberikan anda jalur lebar berganda, imbangan beban (load balancing), dan ketahanan (redundancy) serentak.
+  - Dua Protokol Rundingan Utama:
+    a. PAgP (Port Aggregation Protocol): Protokol hak milik Cisco (Cisco proprietary).
+    b. LACP (Link Aggregation Control Protocol - IEEE 802.3ad): Protokol standard terbuka (industry standard) yang boleh digunakan antara switch Cisco dengan switch vendor lain.
+
+2. EtherChannel Operation
+  - Link Aggregation
+    - There are scenarios in which more bandwidth or redundancy between devices is needed than what can be provided by a single link. 
+    - Multiple links could be connected between devices to increase bandwidth. 
+    - However, Spanning Tree Protocol (STP), which is enabled on Layer 2 devices like Cisco switches by default, will block redundant links to prevent switching loops.
+    - A link aggregation technology is needed that allows redundant links between devices that will not be blocked by STP. 
+    - That technology is known as EtherChannel.
+    - EtherChannel is a link aggregation technology that groups multiple physical Ethernet links together into one single logical link. 
+    - It is used to provide fault-tolerance, load sharing, increased bandwidth, and redundancy between switches, routers, and servers.
+    - EtherChannel technology makes it possible to combine the number of physical links between the switches to increase the overall speed of switch-to-switch communication.
+
+  - EtherChannel
+    - EtherChannel technology was originally developed by Cisco as a LAN switch-to-switch technique of grouping several Fast Ethernet or Gigabit Ethernet ports into one logical channel. 
+    - When an EtherChannel is configured, the resulting virtual interface is called a port channel. 
+    - The physical interfaces are bundled together into a port channel interface.
+
+  - Advantages of EtherChannel
+    - Most configuration tasks can be done on the EtherChannel interface instead of on each individual port, ensuring configuration consistency throughout the links.
+    - EtherChannel relies on existing switch ports. There is no need to upgrade the link to a faster and more expensive connection to have more bandwidth.
+    - ﻿﻿Load balancing takes place between links that are part of the same EtherChannel. Depending on the hardware platform, one or more load-balancing methods can be implemented. 
+      These methods include source MAC and destination MAC load balancing, or source IP and destination IP load balancing, across the physical links.
+    - EtherChannel creates an aggregation that is seen as one logical link. When several EtherChannel bundles exist between two switches, STP may block one of the bundles to prevent switching loops. When STP blocks one of the redundant links, it blocks the entire EtherChannel. 
+      This blocks all the ports belonging to that EtherChannel link. Where there is only one EtherChannel link, all physical links in the EtherChannel are active because STP sees only one (logical) link.
+    - EtherChannel provides redundancy because the overall link is seen as one logical connection. Additionally, the loss of one physical link within the channel does not create a change in the topology. 
+      Therefore, a spanning tree recalculation is not required. Assuming at least one physical link is present; the EtherChannel remains functional, even if its overall throughput decreases because of a lost link within the EtherChannel.
+
+  - Implementation Restrictions
+    EtherChannel implementation on the catalyst 2960 switch has certain implementation restrictions, including the following:
+    a. ﻿﻿Interface types cannot be mixed. For example, Fast Ethernet and Gigabit Ethernet cannot be mixed within a single EtherChannel.
+    ﻿﻿b. Currently each EtherChannel can consist of up to eight compatibly-configured Ethernet ports. 
+       EtherChannel provides full-duplex bandwidth up to 800 Mbps (Fast EtherChannel) or 8 Gbps (Gigabit EtherChannel) between one switch and another switch or host.
+    ﻿﻿c. The Cisco Catalyst 2960 Layer 2 switch currently supports up to six EtherChannels. 
+       However, as new lOSs are developed and platforms change, some cards and platforms may support increased numbers of ports within an EtherChannel link, as well as support an increased number of Gigabit EtherChannels.
+    d. ﻿﻿The individual EtherChannel group member port configuration must be consistent on both devices. If the physical ports of one side are configured as trunks, the physical ports of the other side must also be configured as trunks within the same native VLAN. 
+       Additionally, all ports in each EtherChannel link must be configured as Layer 2 ports.
+    e. ﻿﻿Each EtherChannel has a logical port channel interface, as shown in the figure. A configuration applied to the port channel interface affects all physical interfaces that are assigned to that interface.
+
+  - AutoNegotiation Protocols
+    - EtherChannels can be formed through negotiation using one of two protocols, Port Aggregation Protocol (PAgP) or Link Aggregation Control Protocol (LACP).
+    - These protocols allow ports with similar characteristics to form a channel through dynamic negotiation with adjoining switches.
+    - It is also possible to configure a static or unconditional EtherChannel without PAgP or LACP.
+
+  - PAgP Operation
+    - PAgP (pronounced "Pag - p") is a Cisco-proprietary protocol that aids in the automatic creation of EtherChannel links. 
+    - When an EtherChannel link is configured using PAgP, PAgP packets are sent between EtherChannel-capable ports to negotiate the forming of a channel. 
+    - When PAgP identifies matched Ethernet links, it groups the links into an EtherChannel. 
+    - The EtherChannel is then added to the spanning tree as a single port.
+    - When enabled, PAgP also manages the EtherChannel. 
+    - PAgP packets are sent every 30 seconds. 
+    - PAgP checks for configuration consistency and manages link additions and failures between two switches. 
+    - It ensures that when an EtherChannel is created, all ports have the same type of configuration.
+    - In EtherChannel, it is mandatory that all ports have the same speed, duplex setting, and VLAN information. 
+    - Any port-channel modification after the creation of the channel also changes the aggregated channel ports.
+    - PAgP helps create the EtherChannel link by detecting the configuration of each side and ensuring that links are compatible so that the EtherChannel link can be enabled when needed. 
+    - The modes for PAgP as follows:
+        ﻿a. On: This mode forces the interface to channel without PAgP. Interfaces configured in the on mode do not exchange PAgP packets.
+        b. PAgP desirable: This PAgP mode places an interface in an active negotiating state in which the interface initiates negotiations with other interfaces by sending PAgP packets.
+        c. ﻿﻿PAgP auto: This PAgP mode places an interface in a passive negotiating state in which the interface responds to the PAgP packets that it receives but does not initiate PAgP negotiation.
+    - The modes must be compatible on each side. 
+    - If one side is configured to be in auto mode, it is placed in a passive state, waiting for the other side to initiate the EtherChannel negotiation. 
+    - If the other side is also set to auto, the negotiation never starts and the EtherChannel does not form. 
+    - If all modes are disabled by using the no command, or if no mode is configured, then the EtherChannel is disabled.
+    - The on mode manually places the interface in an EtherChannel, without any negotiation. 
+    - It works only if the other side is also set to on. 
+    - If the other side is set to negotiate parameters through PAgP, no EtherChannel forms, because the side that is set to on mode does not negotiate.
+    - No negotiation between the two switches means there is no checking to make sure that all the links in the EtherChannel are terminating on the other side, or that there is PAgP compatibility on the other switch.
+
+  - LACP Operation
+    - LACP is part of an IEEE specification (802.3ad) that allows several physical ports to be bundled to form a single logical channel. 
+    - LACP allows a switch to negotiate an automatic bundle by sending LACP packets to the other switch. 
+    - It performs a function similar to PAgP with Cisco EtherChannel. 
+    - Because LACP is an IEEE standard, it can be used to facilitate EtherChannels in multivendor environments. 
+    - On Cisco devices, both protocols are supported.
+    - LACP was originally defined as IEEE 802.3ad. However, LACP is now defined in the newer IEEE 802.1AX standard for local and metropolitan area networks.
+    - LACP provides the same negotiation benefits as PAgP. 
+    - LACP helps create the EtherChannel link by detecting the configuration of each side and making sure that they are compatible so that the EtherChannel link can be enabled when needed. 
+    - The modes for LACP are as follows:
+      ﻿﻿a. On: This mode forces the interface to channel without LACP. Interfaces configured in the on mode do not exchange LACP packets.
+      ﻿﻿b. LACP active: This LACP mode places a port in an active negotiating state. In this state, the port initiates negotiations with other ports by sending LACP packets.
+      ﻿﻿c. LACP passive: This LACP mode places a port in a passive negotiating state. In this state, the port responds to the LACP packets that it receives but does not initiate LACP packet negotiation.
+    - Just as with PAgP, modes must be compatible on both sides for the EtherChannel link to form. 
+    - The on mode is repeated, because it creates the EtherChannel configuration unconditionally, without PAgP or LACP dynamic negotiation.
+    - LACP allows for eight active links, and also eight standby links. 
+    - A standby link will become active should one of the current active links fail.
+
+3. Configure EtherChannel
+
+4. Verify and Troubleshoot EtherChannel
