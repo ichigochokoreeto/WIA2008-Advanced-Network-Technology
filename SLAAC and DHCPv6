@@ -1,0 +1,166 @@
+1. Introduction
+- SLAAC and DHCPv6 are dynamic addressing protocols for an IPv6 network. 
+- You will learn how to use SLAAC to allow hosts to create their own IPv6 global unicast address, as well as configure a Cisco IOS router to be a DHCPv6 server, a DHCPv6 client, or a DHCPv6 relay agent.
+
+2. IPv6 GUA Assignment
+  2.1 IPv6 Host Configuration
+    - IPv6 Global Unicast Address Assignment
+    - On a router, an IPv6 global unicast address (GUA) is manually configured using the ipv6 address ipv6-address/prefix-length interface configuration command.
+    - Most Windows host are enabled to dynamically acquire an IPv6 GUA configuration.
+  2.2 IPv6 Host Link-Local Address
+      - C:\PC1> ipconfig
+  2.3 IPv6 GUA Assignment
+      - Dynamic Gua Assignment: Stateless & Stateful
+      - Stateless: SLAAC Only, SLAAC with DHCP Server (Stateless DHCPv6)
+      - Stateful: DHCPv6 Serveer (Stateful DHCPv6)
+  2.4 Three RA Message Flags
+a. A flag: Address Autoconfiguration flag
+b. O flag: Other Configuration flag
+c. M flag: Managed Address Configuration flag
+
+3. SLAAC
+  3.1 SLAAC Overview  
+    - Stateless Address Autoconfiguration
+    - Stateless service
+    - There is no server that maintains network address information to know which IPv6 addresses are being used and which ones are available.
+    - Uses ICMPv6 RA messages to provide addressing and other configuration information that would normally provided by a DHCP server.
+    - A host configures its IPv6 address based on the information that is sent in the RA.
+    - RA messages are sent by an IPv6 router every 200 seconds.
+    - A host can also send a Router Solicitation(RS) message requesting that an IPv6-enabled router send the host an RA.
+  3.2 Enabling SLAAC
+      R1# show ipv6 interface G0/0/1
+      R1(config)# ipv6 unicast-routing
+      R1(config)# exit
+      R1# show ipv6 interface G0/0/1 | section Joined
+  3.3 SLAAC Only Method
+  3.4 ICMPv6 RS Messages
+  3.5 Host Process to Generate Interface ID
+      a. Randomly generated
+      b. EUI-64
+  3.5 Duplicate Address Detection
+
+4. DHCPv6
+  4.1 DHCPv6 Operation Steps
+      - Stateless DHCPv6 uses parts of SLAAC to ensure that all necessary information is supplied to the host.
+      - Stateful DHCPv6 does not require SLAAC.
+      - Steps for DHCPv6 operations:
+        a. The host sends an RS message
+        b. The router responds with an RA message
+        c. The host sends a DHCPv6 SOLICIT message
+        d. The DHCPv6 server responds with an ADVERTISE message
+        e. The host responds to the DHCPv6 server
+        f. The DHCPv6 server sends a REPLY message
+  4.2 Stateless DHCPv6 Operation
+      - Stateless DHCPv6 server is only providing information that is identical for all devices on the network such as the IPv6 adress of a DNS server.
+      - The server is not maintaining any client state information(i.e., a list of available and allocated IPv6 addresses)
+      - Stateless DHCPv6 server is only providing configuration parameters for clients, not IPv6 addresses.
+  4.3 Enable Stateless DHCPv6 on an interface
+      R1(config-if)# ipv6 nd other-config-flag
+      R1(config-if)# end
+      R1#
+      R1# show ipv6 interface g0/0/1 | begin ND
+  4.4 Stateful Operation
+      - RA message tells the client to obtain all addressing information from a stateful DHCPv6 server, except the default gateway address which is the source IPv6 link-local address of the RA.
+      - The server is maintains IPv6 state information.
+  4.5 Enable Stateful DHCPv6 on an Interface
+      R1(config)# int g0/0/1
+      R1(config-if)# ipv6 nd managed-config-flag
+      R1(config-if)# ipv6 nd prefix default no-autoconfig
+      R1(config-if)# end
+      R1#
+      R1# show ipv6 interface g0/0/1 | begin ND
+
+5. Configure DHCPv6 Server
+5.1 DHCPv6 Router Roles
+- Cisco IOS router can be configured to provide DHCPv6 server services:
+a. DHCPv6 Server: Router provides stateless or stateful services.
+b. DHCPv6 Client: Router interface acquires an IPv6 IP configuration from a DHCPv6 server.
+c. DHCPv6 Relay Agent: Router provides DHCPv6 forwarding services when the client and the server are located on different networks.
+
+5.2 Configure a Stateless DHCPv6 Server
+- Enable IPv6 routing
+  R1(config)# ipv6 unicast-routing
+- Define a DHCPv6 pool name
+  R1(config)# ipv6 dhcp pool IPV6-STATELESS
+  R1(config-dhcpv6)#
+- Configure the DHCPv6 pool
+  R1(config-dhcpv6)# dns-server
+  R1(config-dhcpv6)# domain-name example.com
+  R1(config-dhcpv6)# exit
+- Bind the DHCPv6 pool to an interface
+  R1(config)# interface GigabitEthernet0/0/1
+  R1(config-if)# description Link to LAN
+  R1(config-if)# ipv6 address fe80::1 link-local
+  R1(config-if)# ipv6 address 2001:db8:acad:1::1/64
+  R1(config-if)# ipv6 nd other-config-flag
+  R1(config-if)# ipv6 dhcp server IPV6-STATELESS
+  R1(config-if)# no shut
+  R1(config-if)# end
+- Verify that the hosts have received IPv6 addressing information
+  C:\PC1> ipconfig/all
+
+5.3 Configure a Stateless DHCPv6 Client
+- Enable IPv6 routing
+  R3(config)# ipv6 unicast-routing
+- Configure the client router to create an LLA
+  R3(config)# interface g0/0/1
+  R3(config)# ipv6 enable
+- Configure the client router to use SLAAC
+  R3(config-if)# ipv6 address autoconfig
+  R3(config)# end
+- Verify that the client router is assigned a GUA
+  R3# show ipv6 interface brief
+- Verify that the client router received other necessary DHCPv6 information
+  R3# show ipv6 dhcp interface g0/0/1
+
+5.4 Configure a Stateful DHCPv6 Server
+- Enable IPv6 routing
+   R1(config)# ipv6 unicast-routing
+- Define a DHCPv6 pool name
+   R1(config)# ipv6 dhcp pool IPV6-STATEFUL
+   R1(config-dhcpv6)#
+- Configure the DHCPv6 pool name
+  R1(config-dhcpv6)# address prefix 2001:db8:acad:1::/64
+  R1(config-dhcpv6)# dns-server 2001:4860:4860::8888
+  R1(config-dhcpv6)# domain-name example.com
+- Bind the DHCPv6 pool to an interface
+  R1(config)# interface g0/0/1
+  R1(config-if)# description Link to LAN
+  R1(config-if)# ipv6 address fe80::1 link-local
+  R1(config-if)# ipv6 address 2001:db8:acad:1::1/64
+  R1(config-if)# ipv6 nd managed-config-flag
+  R1(config-if)# ipv6 nd prefix default no-autoconfig
+  R1(config-if)# ipv6 dhcp server IPV6-STATEFUL
+  R1(config-if)# no shut
+  R1(config-if)# end
+- Verify that the hosts have received IPv6 addressing information
+  C:\PC1> ipconfig/all
+
+5.5 Configure a Stateful DHCPv6 Client
+- Enable IPv6 routing
+  R3(config)# ipv6 unicast-routing
+- Configure the client router to create an LLA
+  R3(config)# interface g0/0/1
+  R3(config)# ipv6 enable
+- Configure the client router to use DHCPv6
+  R3(config-if)# ipv6 address dhcp
+  R3(config)# end
+- Verify that the client router is assigned a GUA
+  R3# show ipv6 interface brief
+- Verify that the client router received other necessary DHCPv6 information
+  R3# show ipv6 dhcp interface g0/0/1
+
+5.6 DHCPv6 Server Verification Commands
+    R1# show ipv6 dhcp pool
+    R1# show ipv6 dhcp binding
+
+5.7 Configure a DHCPv6 Relay Agent
+    Router(config-if)# ipv6 dhcp relay destination ipv6-address [interface-type interface-number]
+    R1(config)# interface gigabitethernet 0/0/1
+    R1(config-if)# ipv6 dhcp relay destination 2001:db8:acad:1::2 G0/0/0
+    R1(config-if)# exit
+
+5.7 Verify the DHCPv6 Relay Agent
+    R1# show ipv6 dhcp interface
+    R1# show ipv6 dhcp binding
+    C:\PC1> ipconfig/all
